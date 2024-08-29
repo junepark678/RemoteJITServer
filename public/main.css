@@ -1,0 +1,52 @@
+.head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+}
+
+.head > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    box-sizing: border-box;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.everything-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.button {
+    text-decoration: none;
+    color: #212529;
+    border: 1px solid #a469db;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.button:hover {
+    background-color: #a469db;
+    color: white;
+    transition: background-color 0.3s;
+    transition: color 0.3s;
+}
+
+.noborder {
+    border: none;
+}
+
+.dblock {
+    display: block;
+}
+

@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+
+  web:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./configs:/home/runner
+    links:
+      - php
+
+  sidejitserver:
+    build:
+      context: .
+      dockerfile: sidejitserver/Dockerfile
+    ports:
+      - "6969:8080"
+      - "49151:49151"
+    volumes:
+      - ./configs/.pymobiledevice3:/root/.pymobiledevice3
+
+  php:
+    build:
+      context: .
+      dockerfile: php/Dockerfile
