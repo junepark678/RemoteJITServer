@@ -8,4 +8,4 @@ EXPOSE 80
 
 RUN adduser -D runner -h /home/runner
 
-RUN chmod a+rwX /home/runner
+RUN chmod -R a+rwX /home/runner
