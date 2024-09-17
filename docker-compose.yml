@@ -3,6 +3,7 @@ version: '3'
 services:
   config_daemon:
     build:
+      context: .
       dockerfile: config_daemon/Dockerfile
     volumes:
       - ./configs:/configs
@@ -14,7 +15,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
-
+    environment:
+      - HOSTNAME=jit.pythonplayer123.dev
 
   web:
     build:
@@ -24,8 +26,6 @@ services:
       - "8080:80"
     volumes:
       - ./configs:/home/runner
-    links:
-      - php
     networks:
       my_network:
 
@@ -42,7 +42,8 @@ services:
 
     networks:
       my_network:
-        ipv6_address: fd69:420:4ece::69
+#        ipv6_address: fd69:420:4ece::69
+        ipv4_address: 10.10.9.2
   php:
     build:
       context: .
@@ -60,4 +61,5 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: fd69:420:4ece::/48
+#        - subnet: fd69:420:4ece::/48
+        - subnet: 10.10.9.2

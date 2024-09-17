@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
@@ -141,12 +142,20 @@ func main() {
 			w.Write([]byte("Internal server error"))
 			return
 		}
-		address, err := GenerateRandomIPv6("fd69:420:4ece::/48")
+
+		a, err := rand.Int(rand.Reader, big.NewInt(254))
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte("Internal server error"))
 			return
 		}
+		b, err := rand.Int(rand.Reader, big.NewInt(254))
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+		address := net.IPv4(10, 11, byte(a.Int64()+1), byte(b.Int64()+1))
 
 		config := Config{
 			PrivateKey: privateKey.String(),
@@ -172,7 +181,7 @@ func main() {
 					PublicKey: privateKey.PublicKey(),
 					AllowedIPs: []net.IPNet{{
 						IP:   address,
-						Mask: net.CIDRMask(128, 128),
+						Mask: net.CIDRMask(32, 32),
 					}},
 				},
 			}})
@@ -193,15 +202,15 @@ func main() {
 
 		os.WriteFile("./device.json", data, 0644)
 
-		b := make([]byte, 16)
-		_, err = rand.Read(b)
+		bytes := make([]byte, 16)
+		_, err = rand.Read(bytes)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte("Internal server error"))
 			return
 		}
 
-		os.WriteFile("./wgconfigs/"+hex.EncodeToString(b)+".conf", []byte(writer.Bytes()), 0644)
+		os.WriteFile("./wgconfigs/"+hex.EncodeToString(bytes)+".conf", []byte(writer.Bytes()), 0644)
 		return
 	})
 
