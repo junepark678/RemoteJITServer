@@ -15,6 +15,7 @@ services:
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - NET_ADMIN
+      - NET_RAW
     environment:
       - HOSTNAME=jit.pythonplayer123.dev
 
@@ -44,6 +45,10 @@ services:
       my_network:
 #        ipv6_address: fd69:420:4ece::69
         ipv4_address: 10.10.9.69
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
   php:
     build:
       context: .
@@ -63,4 +68,4 @@ networks:
       driver: default
       config:
 #        - subnet: fd69:420:4ece::/48
-        - subnet: 10.10.9.0/24
+        - subnet: 10.0.0.0/8
