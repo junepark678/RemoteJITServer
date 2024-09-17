@@ -3,7 +3,7 @@
 // choose one at random and serve it
 // then delete it
 
-$files = glob('/home/runner/wgconfigs/*.conf');
+$files = glob('/home/runner/wgconfigs/*');
 if (count($files) < 50) {
     // calling http://config_daemon:8080/config will generate a new config
     for ($i = 0; $i < 50; $i++) {
