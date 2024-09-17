@@ -43,7 +43,7 @@ services:
     networks:
       my_network:
 #        ipv6_address: fd69:420:4ece::69
-        ipv4_address: 10.10.9.2
+        ipv4_address: 10.10.9.69
   php:
     build:
       context: .
