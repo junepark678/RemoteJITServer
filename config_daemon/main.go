@@ -199,16 +199,6 @@ func main() {
 
 		os.WriteFile("./device.json", data, 0644)
 
-		bytes := make([]byte, 16)
-		_, err = rand.Read(bytes)
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte("Internal server error"))
-			return
-		}
-
-		fmt.Println("Writing config file")
-
 		return
 	})
 
