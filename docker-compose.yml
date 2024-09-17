@@ -44,7 +44,7 @@ services:
     networks:
       my_network:
 #        ipv6_address: fd69:420:4ece::69
-        ipv4_address: 10.10.9.69
+        ipv4_address: 10.9.9.69
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -55,7 +55,7 @@ services:
       dockerfile: php/Dockerfile
     networks:
       my_network:
-        ipv4_address: 10.10.9.70
+        ipv4_address: 10.9.9.70
 
 networks:
   my_network:
@@ -68,4 +68,4 @@ networks:
       driver: default
       config:
 #        - subnet: fd69:420:4ece::/48
-        - subnet: 10.0.0.0/8
+        - subnet: 10.9.0.0/16
