@@ -1,4 +1,5 @@
-configs
+configs/*
 interfaceKey
 config_daemon/config_daemon
 device.json
+!configs/template.conf
