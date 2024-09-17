@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -165,9 +163,7 @@ func main() {
 			Endpoint:   fmt.Sprintf("%s:51820", os.Getenv("HOSTNAME")),
 		}
 		// writer to string
-		writer := new(bytes.Buffer)
-		err = t.Execute(writer, config)
-		w.Write(writer.Bytes())
+		err = t.Execute(w, config)
 		if err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte("Internal server error"))
@@ -213,12 +209,6 @@ func main() {
 
 		fmt.Println("Writing config file")
 
-		err = os.WriteFile("/configs/wgconfigs/"+hex.EncodeToString(bytes)+".conf", []byte(writer.Bytes()), 0644)
-		if err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte("Internal server error"))
-			fmt.Println(err)
-		}
 		return
 	})
 
