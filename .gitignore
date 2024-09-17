@@ -1,4 +1,7 @@
 configs/*
+!configs/wgconfigs
+configs/wgconfigs/*
+!configs/wgconfigs/.gitkeep
 interfaceKey
 config_daemon/config_daemon
 device.json
