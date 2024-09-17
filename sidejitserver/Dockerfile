@@ -32,7 +32,7 @@ RUN apt update && apt install --no-install-recommends -y gcc build-essential lib
 WORKDIR /app
 # Copy the source code into the container, and install it only for the user.
 RUN python3 -m pip install  --no-warn-script-location --no-cache-dir --user git+https://github.com/jawshoeadan/pymobiledevice3
-RUN python3 -m pip install  --no-warn-script-location --no-cache-dir --user git+https://github.com/nythepegasus/sidejitserver.git
+RUN python3 -m pip install  --no-warn-script-location --no-cache-dir --user git+https://github.com/jawshoeadan/JitStreamer
 ENV PATH=/root/.local/bin:$PATH
 
 
@@ -42,8 +42,7 @@ COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
 # Expose the port that the application listens on.
-ARG PORT=8080   # Default port for the application
-EXPOSE $PORT
+EXPOSE 8080
 EXPOSE 49151
 
 COPY ./sidejitserver/entrypoint.sh /root/entrypoint.sh

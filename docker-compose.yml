@@ -1,6 +1,20 @@
 version: '3'
 
 services:
+  config_daemon:
+    build:
+      dockerfile: config_daemon/Dockerfile
+    volumes:
+      - ./configs:/configs
+    ports:
+      - "51820:51820/udp"
+    networks:
+      my_network:
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+
 
   web:
     build:
@@ -12,6 +26,9 @@ services:
       - ./configs:/home/runner
     links:
       - php
+    networks:
+      my_network:
+
 
   sidejitserver:
     build:
@@ -23,7 +40,24 @@ services:
     volumes:
       - ./configs/.pymobiledevice3:/root/.pymobiledevice3
 
+    networks:
+      my_network:
+        ipv6_address: fd69:420:4ece::69
   php:
     build:
       context: .
       dockerfile: php/Dockerfile
+    networks:
+      my_network:
+
+networks:
+  my_network:
+    # Set IPv6 subnet for use
+    # Don't modify gateway
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "true"
+    ipam:
+      driver: default
+      config:
+        - subnet: fd69:420:4ece::/48

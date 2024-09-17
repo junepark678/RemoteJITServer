@@ -1,0 +1,209 @@
+package main
+
+import (
+	"bytes"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
+	"os"
+	"text/template"
+
+	"golang.zx2c4.com/wireguard/wgctrl"
+	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
+)
+
+type Config struct {
+	PrivateKey string
+	Address    string
+	PublicKey  string
+	Endpoint   string
+}
+
+func GenerateRandomIPv6(prefix string) (net.IP, error) {
+	// Parse the /48 prefix
+	ip, ipNet, err := net.ParseCIDR(prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the prefix is 48 bits (6 bytes)
+	if ones, _ := ipNet.Mask.Size(); ones != 48 {
+		return nil, fmt.Errorf("not a /48 subnet")
+	}
+
+	// Copy the 48-bit prefix into a 16-byte slice for the IPv6 address
+	randomIP := make(net.IP, len(ip))
+	copy(randomIP, ip)
+
+	// Randomly generate the remaining 80 bits
+	randomBytes := make([]byte, 10) // 80 bits = 10 bytes
+	_, err = rand.Read(randomBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fill the last 80 bits of the address with random values
+	copy(randomIP[6:], randomBytes)
+
+	return randomIP, nil
+}
+
+func main() {
+	// try reading from ./interfaceKey
+	// if it exists, use it as the private key
+	// if it doesn't exist, generate a new private key
+	// write the private key to ./interfaceKey
+
+	go RunWireGuard()
+
+	interfacePrivate, err := os.ReadFile("./interfaceKey")
+	if err != nil {
+		privateKey, err := wgtypes.GeneratePrivateKey()
+		if err != nil {
+			fmt.Println("Failed to generate private key")
+			os.Exit(1)
+		}
+		interfacePrivate = []byte(privateKey.String())
+		err = os.WriteFile("./interfaceKey", interfacePrivate, 0644)
+		if err != nil {
+			fmt.Println("Failed to write private key to file")
+			os.Exit(1)
+		}
+	}
+
+	interfacePrivateKey, err := wgtypes.ParseKey(string(interfacePrivate))
+	if err != nil {
+		fmt.Println("Failed to parse private key")
+		os.Exit(1)
+	}
+
+	control, err := wgctrl.New()
+	if err != nil {
+		fmt.Println("Failed to create wgctrl client")
+		os.Exit(1)
+	}
+
+	listenPort := 51820
+
+	// read from ./device.json
+	// if it exists, use it to configure the device
+	// if it doesn't exist, configure the device with the default values
+	// write the device configuration to ./device.json
+
+	var deviceConfig wgtypes.Device
+	data, err := os.ReadFile("./device.json")
+	json.Unmarshal(data, &deviceConfig)
+	if err == nil {
+		control.ConfigureDevice("wg0", wgtypes.Config{
+			PrivateKey:   &interfacePrivateKey,
+			ListenPort:   &listenPort,
+			ReplacePeers: true,
+		})
+	} else {
+		for _, peer := range deviceConfig.Peers {
+			peerConfig := wgtypes.PeerConfig{
+				PublicKey:  peer.PublicKey,
+				AllowedIPs: peer.AllowedIPs,
+			}
+			control.ConfigureDevice("wg0", wgtypes.Config{
+				PrivateKey:   &interfacePrivateKey,
+				ListenPort:   &listenPort,
+				ReplacePeers: false,
+				Peers:        []wgtypes.PeerConfig{peerConfig},
+			})
+		}
+	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// 418
+		w.WriteHeader(418)
+		w.Write([]byte("I'm a teapot"))
+	})
+	// Handle /config
+	http.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
+		// load config template from ./template.conf
+
+		templateFile := "./template.conf"
+		t, err := template.ParseFiles(templateFile)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+
+		// execute template with config values
+		privateKey, err := wgtypes.GeneratePrivateKey()
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+		address, err := GenerateRandomIPv6("fd69:420:4ece::/48")
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+
+		config := Config{
+			PrivateKey: privateKey.String(),
+			Address:    address.String(),
+			PublicKey:  interfacePrivateKey.PublicKey().String(),
+			Endpoint:   fmt.Sprintf("%s:51820", os.Getenv("HOSTNAME")),
+		}
+		// writer to string
+		writer := new(bytes.Buffer)
+		err = t.Execute(writer, config)
+		w.Write(writer.Bytes())
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+		control.ConfigureDevice("wg0", wgtypes.Config{
+			PrivateKey:   &interfacePrivateKey,
+			ListenPort:   &listenPort,
+			ReplacePeers: false,
+			Peers: []wgtypes.PeerConfig{
+				{
+					PublicKey: privateKey.PublicKey(),
+					AllowedIPs: []net.IPNet{{
+						IP:   address,
+						Mask: net.CIDRMask(128, 128),
+					}},
+				},
+			}})
+
+		device, err := control.Device("wg0")
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+
+		data, err := json.Marshal(device)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+
+		os.WriteFile("./device.json", data, 0644)
+
+		b := make([]byte, 16)
+		_, err = rand.Read(b)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+
+		os.WriteFile("./wgconfigs/"+hex.EncodeToString(b)+".conf", []byte(writer.Bytes()), 0644)
+		return
+	})
+
+	http.ListenAndServe(":8080", nil)
+}

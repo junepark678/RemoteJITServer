@@ -4,8 +4,13 @@
 // then delete it
 
 $files = glob('/home/runner/wgconfigs/*.conf');
-if (count($files) === 0) {
-    die('No configs available');
+while (count($files) < 50) {
+    // calling http://config_daemon:8080/config will generate a new config
+    $ch = file_get_contents('http://config_daemon:8080/config');
+    if ($ch === false) {
+        die('Failed to generate config');
+    }
+    $files = glob('/home/runner/wgconfigs/*.conf');
 }
 
 $file = $files[array_rand($files)];
