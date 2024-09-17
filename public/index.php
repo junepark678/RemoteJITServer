@@ -10,7 +10,6 @@
     <nav class="head">
         <a class="noborder button" href="index.php">SideOTAJIT</a>
         <div>
-            <a class="button" href="register.php">Register</a>
             <a class="button" href="activate.php">Activate</a>
         </div>
     </nav>
