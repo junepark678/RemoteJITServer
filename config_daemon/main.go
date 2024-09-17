@@ -118,6 +118,7 @@ func main() {
 		}
 	}
 
+	fmt.Println(os.Getwd())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// 418
 		w.WriteHeader(418)
@@ -210,7 +211,14 @@ func main() {
 			return
 		}
 
-		os.WriteFile("./wgconfigs/"+hex.EncodeToString(bytes)+".conf", []byte(writer.Bytes()), 0644)
+		fmt.Println("Writing config file")
+
+		err = os.WriteFile("/configs/wgconfigs/"+hex.EncodeToString(bytes)+".conf", []byte(writer.Bytes()), 0644)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			fmt.Println(err)
+		}
 		return
 	})
 
