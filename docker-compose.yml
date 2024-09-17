@@ -62,4 +62,4 @@ networks:
       driver: default
       config:
 #        - subnet: fd69:420:4ece::/48
-        - subnet: 10.10.9.2
+        - subnet: 10.10.9.0/24
