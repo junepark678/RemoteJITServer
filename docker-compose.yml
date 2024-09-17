@@ -50,6 +50,7 @@ services:
       dockerfile: php/Dockerfile
     networks:
       my_network:
+        ipv4_address: 10.10.9.70
 
 networks:
   my_network:
