@@ -59,6 +59,10 @@ func main() {
 
 	go func() {
 		err := exec.Command("ip", "link", "add", "dev", "wg0", "type", "wireguard").Run()
+		if exec.Command("ip", "link", "set", "up", "dev", "wg0").Run() != nil {
+			fmt.Println("Failed to bring up interface")
+			os.Exit(1)
+		}
 		if err != nil {
 			fmt.Println("Failed to create wireguard interface")
 			os.Exit(1)
@@ -141,10 +145,6 @@ func main() {
 			os.Exit(1)
 		}
 
-		if exec.Command("ip", "link", "set", "up", "dev", "wg0").Run() != nil {
-			fmt.Println("Failed to bring up interface")
-			os.Exit(1)
-		}
 	}()
 
 	interfacePrivate, err := os.ReadFile("./interfaceKey")
