@@ -99,8 +99,9 @@ func main() {
 		if err != nil {
 			fmt.Println("Failed to read device configuration")
 			peerConfig = []wgtypes.PeerConfig{}
+		} else {
+			json.Unmarshal(data, &peerConfig)
 		}
-		json.Unmarshal(data, &peerConfig)
 
 		control, err := wgctrl.New()
 		if err != nil {
