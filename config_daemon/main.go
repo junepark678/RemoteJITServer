@@ -221,7 +221,13 @@ func main() {
 			w.Write([]byte("Internal server error"))
 			return
 		}
-		address := net.IPv4(10, 12, byte(a.Int64()+1), byte(b.Int64()+1))
+		c, err := rand.Int(rand.Reader, big.NewInt(1))
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
+		address := net.IPv4(10, byte(c.Int64()+12), byte(a.Int64()+1), byte(b.Int64()+1))
 
 		config := Config{
 			PrivateKey: privateKey.String(),
