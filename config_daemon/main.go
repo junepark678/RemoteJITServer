@@ -111,7 +111,9 @@ func main() {
 
 		listenPort := 51820
 
-		if err == nil {
+		println("peerConfig", peerConfig)
+
+		if len(peerConfig) == 0 {
 			err = control.ConfigureDevice("wg0", wgtypes.Config{
 				PrivateKey:   &interfacePrivateKey,
 				ListenPort:   &listenPort,
