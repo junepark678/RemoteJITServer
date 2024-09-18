@@ -7,7 +7,7 @@ services:
       dockerfile: config_daemon/Dockerfile
     volumes:
       - ./configs:/configs
-      - ./configs:/root
+      - ./configs/.pymobiledevice3:/root/.pymobiledevice3
       - /lib/modules:/lib/modules
     #ports:
     #  - "51820:51820/udp"
