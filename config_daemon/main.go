@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"text/template"
 
 	"golang.zx2c4.com/wireguard/wgctrl"
@@ -118,6 +119,9 @@ func main() {
 	}
 
 	fmt.Println(os.Getwd())
+
+	exec.Command("ip", "addr", "add", "10.12.0.69/32", "dev", "wg0").Run()
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// 418
 		w.WriteHeader(418)
@@ -155,7 +159,7 @@ func main() {
 			w.Write([]byte("Internal server error"))
 			return
 		}
-		address := net.IPv4(10, 9, byte(a.Int64()+1), byte(b.Int64()+1))
+		address := net.IPv4(10, 12, byte(a.Int64()+1), byte(b.Int64()+1))
 
 		config := Config{
 			PrivateKey: privateKey.String(),
@@ -220,6 +224,8 @@ func main() {
 			ReplacePeers: true,
 			Peers:        peers,
 		})
+
+		exec.Command("ip", "route", "add", address.String()+"/32", "dev", "wg0").Run()
 
 		return
 	})
