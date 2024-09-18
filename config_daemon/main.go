@@ -102,18 +102,19 @@ func main() {
 			ReplacePeers: true,
 		})
 	} else {
-		for _, peer := range deviceConfig.Peers {
-			peerConfig := wgtypes.PeerConfig{
+		peers := make([]wgtypes.PeerConfig, len(deviceConfig.Peers))
+		for i, peer := range deviceConfig.Peers {
+			peers[i] = wgtypes.PeerConfig{
 				PublicKey:  peer.PublicKey,
 				AllowedIPs: peer.AllowedIPs,
 			}
-			control.ConfigureDevice("wg0", wgtypes.Config{
-				PrivateKey:   &interfacePrivateKey,
-				ListenPort:   &listenPort,
-				ReplacePeers: false,
-				Peers:        []wgtypes.PeerConfig{peerConfig},
-			})
 		}
+		control.ConfigureDevice("wg0", wgtypes.Config{
+			PrivateKey:   &interfacePrivateKey,
+			ListenPort:   &listenPort,
+			ReplacePeers: true,
+			Peers:        peers,
+		})
 	}
 
 	fmt.Println(os.Getwd())
@@ -198,6 +199,27 @@ func main() {
 		}
 
 		os.WriteFile("./device.json", data, 0644)
+
+		peers := make([]wgtypes.PeerConfig, len(device.Peers)+1)
+		for i, peer := range deviceConfig.Peers {
+			peers[i] = wgtypes.PeerConfig{
+				PublicKey:  peer.PublicKey,
+				AllowedIPs: peer.AllowedIPs,
+			}
+		}
+		peers[len(peers)-1] = wgtypes.PeerConfig{
+			PublicKey: privateKey.PublicKey(),
+			AllowedIPs: []net.IPNet{{
+				IP:   address,
+				Mask: net.CIDRMask(32, 32),
+			}},
+		}
+		control.ConfigureDevice("wg0", wgtypes.Config{
+			PrivateKey:   &interfacePrivateKey,
+			ListenPort:   &listenPort,
+			ReplacePeers: true,
+			Peers:        peers,
+		})
 
 		return
 	})
