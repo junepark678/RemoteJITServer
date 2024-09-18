@@ -138,15 +138,16 @@ func main() {
 
 		fmt.Println(os.Getwd())
 
-		if exec.Command("ip", "addr", "add", "10.12.0.69/32", "dev", "wg0").Run() != nil {
+		if exec.Command("ip", "addr", "add", "10.11.0.69/32", "dev", "wg0").Run() != nil {
 			fmt.Println("Failed to add IP address to interface")
 			os.Exit(1)
 		}
 
 		for _, peer := range peerConfig {
 			for _, ipNet := range peer.AllowedIPs {
-				if exec.Command("ip", "route", "add", ipNet.IP.String(), "dev", "wg0").Run() != nil {
-					fmt.Println("Failed to add route", ipNet.IP.String())
+				println("ipNet", ipNet)
+				if exec.Command("ip", "route", "add", ipNet.String(), "dev", "wg0").Run() != nil {
+					fmt.Println("Failed to add route", ipNet.String())
 					os.Exit(1)
 				}
 			}
