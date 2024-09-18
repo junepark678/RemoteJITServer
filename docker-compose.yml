@@ -18,6 +18,11 @@ services:
       - NET_RAW
     environment:
       - HOSTNAME=jit.pythonplayer123.dev
+    networks:
+      my_network:
+#        ipv6_address: fd69:420:4ece::69
+        ipv4_address: 10.9.9.69
+
 
   web:
     build:
