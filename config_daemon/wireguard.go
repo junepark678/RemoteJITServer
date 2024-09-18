@@ -170,6 +170,9 @@ func RunWireGuard() {
 				PublicKey:  peer.PublicKey,
 				AllowedIPs: peer.AllowedIPs,
 			}
+			for _, ip := range peer.AllowedIPs {
+				exec.Command("ip", "addr", "add", ip.String(), "dev", "wg0").Run()
+			}
 		}
 		control.ConfigureDevice("wg0", wgtypes.Config{
 			PrivateKey:   &interfacePrivateKey,
