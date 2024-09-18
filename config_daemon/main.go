@@ -145,7 +145,7 @@ func main() {
 
 		for _, peer := range peerConfig {
 			for _, ipNet := range peer.AllowedIPs {
-				println("ipNet", ipNet)
+				println("ipNet", ipNet.String())
 				if exec.Command("ip", "route", "add", ipNet.String(), "dev", "wg0").Run() != nil {
 					fmt.Println("Failed to add route", ipNet.String())
 					os.Exit(1)
