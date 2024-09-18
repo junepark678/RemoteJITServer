@@ -112,7 +112,7 @@ func main() {
 		listenPort := 51820
 
 		if err == nil {
-			control.ConfigureDevice("wg0", wgtypes.Config{
+			err = control.ConfigureDevice("wg0", wgtypes.Config{
 				PrivateKey:   &interfacePrivateKey,
 				ListenPort:   &listenPort,
 				ReplacePeers: true,
@@ -130,6 +130,7 @@ func main() {
 			})
 			if err != nil {
 				fmt.Println("Failed to configure device")
+				fmt.Println(err)
 				os.Exit(1)
 			}
 		}
