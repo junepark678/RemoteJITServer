@@ -7,7 +7,7 @@ services:
       dockerfile: config_daemon/Dockerfile
     volumes:
       - ./configs:/configs
-      - ./configs:/home/runner
+      - ./configs:/root
       - /lib/modules:/lib/modules
     #ports:
     #  - "51820:51820/udp"
