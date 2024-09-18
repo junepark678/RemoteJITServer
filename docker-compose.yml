@@ -9,8 +9,8 @@ services:
       - ./configs:/configs
       - ./configs:/home/runner
       - /lib/modules:/lib/modules
-    ports:
-      - "51820:51820/udp"
+    #ports:
+    #  - "51820:51820/udp"
     networks:
       my_network:
         ipv4_address: 10.9.9.69
