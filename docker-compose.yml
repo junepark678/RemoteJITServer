@@ -31,23 +31,23 @@ services:
       my_network:
 
 
-  sidejitserver:
-    build:
-      context: .
-      dockerfile: sidejitserver/Dockerfile
-    ports:
-      - "6969:8080"
-      - "49151:49151"
-    volumes:
-      - ./configs/.pymobiledevice3:/root/.pymobiledevice3
+#   sidejitserver:
+#     build:
+#       context: .
+#       dockerfile: sidejitserver/Dockerfile
+#     ports:
+#       - "6969:8080"
+#       - "49151:49151"
+#     volumes:
+#       - ./configs/.pymobiledevice3:/root/.pymobiledevice3
 
-    networks:
-      my_network:
-#        ipv6_address: fd69:420:4ece::69
-        ipv4_address: 10.9.9.69
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
+#     networks:
+#       my_network:
+# #        ipv6_address: fd69:420:4ece::69
+#         ipv4_address: 10.9.9.69
+#     cap_add:
+#       - NET_ADMIN
+#       - NET_RAW
 
   php:
     build:
