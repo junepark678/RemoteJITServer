@@ -7,10 +7,13 @@ services:
       dockerfile: config_daemon/Dockerfile
     volumes:
       - ./configs:/configs
+      - ./configs:/home/runner
     ports:
       - "51820:51820/udp"
     networks:
       my_network:
+        ipv4_address: 10.9.9.69
+
     devices:
       - /dev/net/tun:/dev/net/tun
     cap_add:
@@ -18,10 +21,6 @@ services:
       - NET_RAW
     environment:
       - HOSTNAME=jit.pythonplayer123.dev
-    networks:
-      my_network:
-#        ipv6_address: fd69:420:4ece::69
-        ipv4_address: 10.9.9.69
 
 
   web:
