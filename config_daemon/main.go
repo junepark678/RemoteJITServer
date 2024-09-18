@@ -57,7 +57,76 @@ func main() {
 	// if it doesn't exist, generate a new private key
 	// write the private key to ./interfaceKey
 
-	go RunWireGuard()
+	go func() {
+		exec.Command("ip", "link", "add", "dev", "wg0", "type", "wireguard").Run()
+
+		interfacePrivate, err := os.ReadFile("./interfaceKey")
+		if err != nil {
+			privateKey, err := wgtypes.GeneratePrivateKey()
+			if err != nil {
+				fmt.Println("Failed to generate private key")
+				os.Exit(1)
+			}
+			interfacePrivate = []byte(privateKey.String())
+			err = os.WriteFile("./interfaceKey", interfacePrivate, 0644)
+			if err != nil {
+				fmt.Println("Failed to write private key to file")
+				os.Exit(1)
+			}
+		}
+
+		interfacePrivateKey, err := wgtypes.ParseKey(string(interfacePrivate))
+		if err != nil {
+			fmt.Println("Failed to parse private key")
+			os.Exit(1)
+		}
+
+		// read from ./device.json
+		// if it exists, use it to configure the device
+		// if it doesn't exist, configure the device with the default values
+		// write the device configuration to ./device.json
+
+		var deviceConfig wgtypes.Device
+		data, err := os.ReadFile("./device.json")
+		json.Unmarshal(data, &deviceConfig)
+
+		control, err := wgctrl.New()
+		if err != nil {
+			fmt.Println("Failed to create wgctrl client")
+			os.Exit(1)
+		}
+
+		listenPort := 51820
+
+		if err == nil {
+			control.ConfigureDevice("wg0", wgtypes.Config{
+				PrivateKey:   &interfacePrivateKey,
+				ListenPort:   &listenPort,
+				ReplacePeers: true,
+			})
+		} else {
+			peers := make([]wgtypes.PeerConfig, len(deviceConfig.Peers))
+			for i, peer := range deviceConfig.Peers {
+				peers[i] = wgtypes.PeerConfig{
+					PublicKey:  peer.PublicKey,
+					AllowedIPs: peer.AllowedIPs,
+				}
+				for _, ip := range peer.AllowedIPs {
+					exec.Command("ip", "addr", "add", ip.String(), "dev", "wg0").Run()
+				}
+			}
+			control.ConfigureDevice("wg0", wgtypes.Config{
+				PrivateKey:   &interfacePrivateKey,
+				ListenPort:   &listenPort,
+				ReplacePeers: true,
+				Peers:        peers,
+			})
+		}
+
+		fmt.Println(os.Getwd())
+
+		exec.Command("ip", "addr", "add", "10.12.0.69/32", "dev", "wg0").Run()
+	}()
 
 	interfacePrivate, err := os.ReadFile("./interfaceKey")
 	if err != nil {
