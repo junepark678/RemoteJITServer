@@ -143,6 +143,15 @@ func main() {
 			os.Exit(1)
 		}
 
+		for _, peer := range peerConfig {
+			for _, ipNet := range peer.AllowedIPs {
+				if exec.Command("ip", "route", "add", ipNet.IP.String(), "dev", "wg0").Run() != nil {
+					fmt.Println("Failed to add route", ipNet.IP.String())
+					os.Exit(1)
+				}
+			}
+		}
+
 	}()
 
 	interfacePrivate, err := os.ReadFile("./interfaceKey")
