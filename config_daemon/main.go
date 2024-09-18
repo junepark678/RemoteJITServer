@@ -58,7 +58,11 @@ func main() {
 	// write the private key to ./interfaceKey
 
 	go func() {
-		exec.Command("ip", "link", "add", "dev", "wg0", "type", "wireguard").Run()
+		err := exec.Command("ip", "link", "add", "dev", "wg0", "type", "wireguard").Run()
+		if err != nil {
+			fmt.Println("Failed to create wireguard interface")
+			os.Exit(1)
+		}
 
 		interfacePrivate, err := os.ReadFile("./interfaceKey")
 		if err != nil {
@@ -88,6 +92,10 @@ func main() {
 
 		var deviceConfig wgtypes.Device
 		data, err := os.ReadFile("./device.json")
+		if err != nil {
+			fmt.Println("Failed to read device configuration")
+			os.Exit(1)
+		}
 		json.Unmarshal(data, &deviceConfig)
 
 		control, err := wgctrl.New()
@@ -112,7 +120,10 @@ func main() {
 					AllowedIPs: peer.AllowedIPs,
 				}
 				for _, ip := range peer.AllowedIPs {
-					exec.Command("ip", "addr", "add", ip.String(), "dev", "wg0").Run()
+					if exec.Command("ip", "addr", "add", ip.String(), "dev", "wg0").Run() != nil {
+						fmt.Println("Failed to add IP address to interface")
+						os.Exit(1)
+					}
 				}
 			}
 			control.ConfigureDevice("wg0", wgtypes.Config{
@@ -125,7 +136,10 @@ func main() {
 
 		fmt.Println(os.Getwd())
 
-		exec.Command("ip", "addr", "add", "10.12.0.69/32", "dev", "wg0").Run()
+		if exec.Command("ip", "addr", "add", "10.12.0.69/32", "dev", "wg0").Run() != nil {
+			fmt.Println("Failed to add IP address to interface")
+			os.Exit(1)
+		}
 	}()
 
 	interfacePrivate, err := os.ReadFile("./interfaceKey")
