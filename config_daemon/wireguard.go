@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 
@@ -11,6 +13,8 @@ import (
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/ipc"
 	"golang.zx2c4.com/wireguard/tun"
+	"golang.zx2c4.com/wireguard/wgctrl"
+	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
 
 const (
@@ -114,6 +118,70 @@ func RunWireGuard() {
 
 	signal.Notify(term, unix.SIGTERM)
 	signal.Notify(term, os.Interrupt)
+
+	interfacePrivate, err := os.ReadFile("./interfaceKey")
+	if err != nil {
+		privateKey, err := wgtypes.GeneratePrivateKey()
+		if err != nil {
+			fmt.Println("Failed to generate private key")
+			os.Exit(1)
+		}
+		interfacePrivate = []byte(privateKey.String())
+		err = os.WriteFile("./interfaceKey", interfacePrivate, 0644)
+		if err != nil {
+			fmt.Println("Failed to write private key to file")
+			os.Exit(1)
+		}
+	}
+
+	interfacePrivateKey, err := wgtypes.ParseKey(string(interfacePrivate))
+	if err != nil {
+		fmt.Println("Failed to parse private key")
+		os.Exit(1)
+	}
+
+	// read from ./device.json
+	// if it exists, use it to configure the device
+	// if it doesn't exist, configure the device with the default values
+	// write the device configuration to ./device.json
+
+	var deviceConfig wgtypes.Device
+	data, err := os.ReadFile("./device.json")
+	json.Unmarshal(data, &deviceConfig)
+
+	control, err := wgctrl.New()
+	if err != nil {
+		fmt.Println("Failed to create wgctrl client")
+		os.Exit(1)
+	}
+
+	listenPort := 51820
+
+	if err == nil {
+		control.ConfigureDevice("wg0", wgtypes.Config{
+			PrivateKey:   &interfacePrivateKey,
+			ListenPort:   &listenPort,
+			ReplacePeers: true,
+		})
+	} else {
+		peers := make([]wgtypes.PeerConfig, len(deviceConfig.Peers))
+		for i, peer := range deviceConfig.Peers {
+			peers[i] = wgtypes.PeerConfig{
+				PublicKey:  peer.PublicKey,
+				AllowedIPs: peer.AllowedIPs,
+			}
+		}
+		control.ConfigureDevice("wg0", wgtypes.Config{
+			PrivateKey:   &interfacePrivateKey,
+			ListenPort:   &listenPort,
+			ReplacePeers: true,
+			Peers:        peers,
+		})
+	}
+
+	fmt.Println(os.Getwd())
+
+	exec.Command("ip", "addr", "add", "10.12.0.69/32", "dev", "wg0").Run()
 
 	select {
 	case <-term:

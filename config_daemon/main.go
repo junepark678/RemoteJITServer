@@ -88,40 +88,6 @@ func main() {
 
 	listenPort := 51820
 
-	// read from ./device.json
-	// if it exists, use it to configure the device
-	// if it doesn't exist, configure the device with the default values
-	// write the device configuration to ./device.json
-
-	var deviceConfig wgtypes.Device
-	data, err := os.ReadFile("./device.json")
-	json.Unmarshal(data, &deviceConfig)
-	if err == nil {
-		control.ConfigureDevice("wg0", wgtypes.Config{
-			PrivateKey:   &interfacePrivateKey,
-			ListenPort:   &listenPort,
-			ReplacePeers: true,
-		})
-	} else {
-		peers := make([]wgtypes.PeerConfig, len(deviceConfig.Peers))
-		for i, peer := range deviceConfig.Peers {
-			peers[i] = wgtypes.PeerConfig{
-				PublicKey:  peer.PublicKey,
-				AllowedIPs: peer.AllowedIPs,
-			}
-		}
-		control.ConfigureDevice("wg0", wgtypes.Config{
-			PrivateKey:   &interfacePrivateKey,
-			ListenPort:   &listenPort,
-			ReplacePeers: true,
-			Peers:        peers,
-		})
-	}
-
-	fmt.Println(os.Getwd())
-
-	exec.Command("ip", "addr", "add", "10.12.0.69/32", "dev", "wg0").Run()
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// 418
 		w.WriteHeader(418)
@@ -205,6 +171,12 @@ func main() {
 		os.WriteFile("./device.json", data, 0644)
 
 		peers := make([]wgtypes.PeerConfig, len(device.Peers)+1)
+		deviceConfig, err := control.Device("wg0")
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte("Internal server error"))
+			return
+		}
 		for i, peer := range deviceConfig.Peers {
 			peers[i] = wgtypes.PeerConfig{
 				PublicKey:  peer.PublicKey,
